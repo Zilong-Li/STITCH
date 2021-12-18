@@ -615,19 +615,18 @@ void calculate_diploid_gammaUpdate(
     }
 
     if (printLike) {
-      arma::vec pl = arma::ones<arma::vec>(K * K);
+      arma::rowvec pl = arma::ones<arma::rowvec>(K * K);
       for(k1 = 0; k1 < K; k1++) {
           for(k2 = 0; k2 < K; k2++) {
               for(iRead = 0; iRead < nReads; iRead++) {
                   eMatRead_t_col = eMatRead_t.col(iRead);
-                  eHapsCurrent_t_col = eHapsCurrent_tc.slice(s).col(t);
                   a = eMatRead_t_col(k1);
                   b = eMatRead_t_col(k2);
                   pl[k1*K + k2] *= (a/2 + b/2);
               }
           }
       }
-      std::cout << pl << std::endl;
+      std::cout << pl;
     }
 
     return;
@@ -867,7 +866,7 @@ Rcpp::List forwardBackwardDiploid(
           prev_section=next_section;
           //
           hapSum_tc.slice(s) += gammaK_t;
-          if (!generate_fb_snp_offsets) {
+          if (!generate_fb_snp_offsets || printLike) {
               next_section="Update prior, gamma, jUpdate";
               prev=print_times(prev, suppressOutput, prev_section, next_section);
               prev_section=next_section;
@@ -877,8 +876,6 @@ Rcpp::List forwardBackwardDiploid(
               calculate_diploid_gammaUpdate(gammaSum0_tc, gammaSum1_tc, s, sampleReads, gamma_t, eHapsCurrent_tc, eMatRead_t, prev, suppressOutput, prev_section, next_section, printLike);
               //
               rcpp_make_diploid_jUpdate(alphaMatSum_tc, s, alphaHat_t, betaHat_t, transMatRate_tc_D, alphaMatCurrent_tc, eMatGrid_t, prev, suppressOutput, prev_section, next_section);
-          } else if (printLike) {
-              calculate_diploid_gammaUpdate(gammaSum0_tc, gammaSum1_tc, s, sampleReads, gamma_t, eHapsCurrent_tc, eMatRead_t, prev, suppressOutput, prev_section, next_section, printLike);
           }
           //
       }
