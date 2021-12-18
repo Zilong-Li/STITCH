@@ -3103,7 +3103,8 @@ run_forward_backwards <- function(
     eMatGrid_t = array(0, c(1, 1)),
     output_haplotype_dosages = FALSE,
     rescale_eMatHap_t = TRUE,
-    rescale_eMatGrid_t = TRUE
+    rescale_eMatGrid_t = TRUE,
+    printLike = FALSE
 ) {
 
     Jmax_local <- get_Jmax_wrt_iteration(Jmax, iteration, niterations)
@@ -3303,7 +3304,8 @@ run_forward_backwards <- function(
             priorSum_m= priorSum_m,
             pass_in_alphaBeta = pass_in_alphaBeta,
             output_haplotype_dosages = output_haplotype_dosages,
-            rescale_eMatGrid_t = rescale_eMatGrid_t
+            rescale_eMatGrid_t = rescale_eMatGrid_t,
+            printLike =  printLike
         )
         ## alphaStart = alphaBetaBlock[[1]]$alphaHatBlocks_t[, i_snp_block_for_alpha_beta],
         ## betaEnd = alphaBetaBlock[[1]]$betaHatBlocks_t[, i_snp_block_for_alpha_beta],
@@ -3746,45 +3748,89 @@ subset_of_complete_iteration <- function(
             bundledSampleProbs <- out$bundledSampleProbs
         }
 
-        fbsoL <- run_forward_backwards(
-            sampleReads = sampleReads,
-            method = method,
-            regionName = regionName,
-            iSample = iSample,
-            eHapsCurrent_tc = eHapsCurrent_tc,
-            alphaMatCurrent_tc = alphaMatCurrent_tc,            
-            transMatRate_tc_H = transMatRate_tc_H,
-            transMatRate_tc_D = transMatRate_tc_D,
-            priorCurrent_m = priorCurrent_m,
-            iteration = iteration,
-            niterations = niterations,
-            grid_eHaps_distance = grid_eHaps_distance,
-            maxDifferenceBetweenReads = maxDifferenceBetweenReads,
-            maxEmissionMatrixDifference = maxEmissionMatrixDifference,
-            highCovInLow = highCovInLow,
-            Jmax = Jmax,
-            nor = nor,
-            pRgivenH1_m = pRgivenH1_m,
-            pRgivenH2_m = pRgivenH2_m,
-            srp = srp,
-            pseudoHaploidModel = pseudoHaploidModel,
-            blocks_for_output = blocks_for_output,
-            generate_fb_snp_offsets = generate_fb_snp_offsets,
-            return_a_sampled_path = return_a_sampled_path,
-            grid = grid,
-            update_in_place = TRUE,
-            gammaSum0_tc = gammaSum0_tc,
-            gammaSum1_tc = gammaSum1_tc,
-            alphaMatSum_tc = alphaMatSum_tc,
-            hapSum_tc = hapSum_tc,
-            priorSum_m= priorSum_m,
-            pass_in_alphaBeta = pass_in_alphaBeta,
-            alphaHat_t = alphaHat_t,
-            betaHat_t = betaHat_t,
-            gamma_t = gamma_t,
-            eMatGrid_t = eMatGrid_t,
-            return_gammaK = return_gammaK 
-        )
+        if (iteration == niterations) {
+            fbsoL <- run_forward_backwards(
+                sampleReads = sampleReads,
+                method = method,
+                regionName = regionName,
+                iSample = iSample,
+                eHapsCurrent_tc = eHapsCurrent_tc,
+                alphaMatCurrent_tc = alphaMatCurrent_tc,            
+                transMatRate_tc_H = transMatRate_tc_H,
+                transMatRate_tc_D = transMatRate_tc_D,
+                priorCurrent_m = priorCurrent_m,
+                iteration = iteration,
+                niterations = niterations,
+                grid_eHaps_distance = grid_eHaps_distance,
+                maxDifferenceBetweenReads = maxDifferenceBetweenReads,
+                maxEmissionMatrixDifference = maxEmissionMatrixDifference,
+                highCovInLow = highCovInLow,
+                Jmax = Jmax,
+                nor = nor,
+                pRgivenH1_m = pRgivenH1_m,
+                pRgivenH2_m = pRgivenH2_m,
+                srp = srp,
+                pseudoHaploidModel = pseudoHaploidModel,
+                blocks_for_output = blocks_for_output,
+                generate_fb_snp_offsets = generate_fb_snp_offsets,
+                return_a_sampled_path = return_a_sampled_path,
+                grid = grid,
+                update_in_place = TRUE,
+                gammaSum0_tc = gammaSum0_tc,
+                gammaSum1_tc = gammaSum1_tc,
+                alphaMatSum_tc = alphaMatSum_tc,
+                hapSum_tc = hapSum_tc,
+                priorSum_m= priorSum_m,
+                pass_in_alphaBeta = pass_in_alphaBeta,
+                alphaHat_t = alphaHat_t,
+                betaHat_t = betaHat_t,
+                gamma_t = gamma_t,
+                eMatGrid_t = eMatGrid_t,
+                return_gammaK = return_gammaK,
+                printLike = TRUE
+            )
+        } else {
+            fbsoL <- run_forward_backwards(
+                sampleReads = sampleReads,
+                method = method,
+                regionName = regionName,
+                iSample = iSample,
+                eHapsCurrent_tc = eHapsCurrent_tc,
+                alphaMatCurrent_tc = alphaMatCurrent_tc,            
+                transMatRate_tc_H = transMatRate_tc_H,
+                transMatRate_tc_D = transMatRate_tc_D,
+                priorCurrent_m = priorCurrent_m,
+                iteration = iteration,
+                niterations = niterations,
+                grid_eHaps_distance = grid_eHaps_distance,
+                maxDifferenceBetweenReads = maxDifferenceBetweenReads,
+                maxEmissionMatrixDifference = maxEmissionMatrixDifference,
+                highCovInLow = highCovInLow,
+                Jmax = Jmax,
+                nor = nor,
+                pRgivenH1_m = pRgivenH1_m,
+                pRgivenH2_m = pRgivenH2_m,
+                srp = srp,
+                pseudoHaploidModel = pseudoHaploidModel,
+                blocks_for_output = blocks_for_output,
+                generate_fb_snp_offsets = generate_fb_snp_offsets,
+                return_a_sampled_path = return_a_sampled_path,
+                grid = grid,
+                update_in_place = TRUE,
+                gammaSum0_tc = gammaSum0_tc,
+                gammaSum1_tc = gammaSum1_tc,
+                alphaMatSum_tc = alphaMatSum_tc,
+                hapSum_tc = hapSum_tc,
+                priorSum_m= priorSum_m,
+                pass_in_alphaBeta = pass_in_alphaBeta,
+                alphaHat_t = alphaHat_t,
+                betaHat_t = betaHat_t,
+                gamma_t = gamma_t,
+                eMatGrid_t = eMatGrid_t,
+                return_gammaK = return_gammaK
+            )
+
+        }
 
         ## kind of like
         if (iteration == niterations) {

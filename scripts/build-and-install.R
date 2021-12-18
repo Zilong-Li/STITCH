@@ -11,6 +11,7 @@ for(key in c("--file=", "--f=")) {
 }
 
 clean_build <- TRUE
+clean_build <- FALSE
 if (Sys.getenv("DIRTY_BUILD") == "TRUE")
     clean_build <- FALSE
 
@@ -50,9 +51,9 @@ result <- tryCatch({
 })
 
 ## build PDF
-pdf_name <- file.path("releases", paste0("STITCH_", version, ".pdf"))
-args = c(
-    "CMD", "Rd2pdf", pkg, "--batch", "--force", "--no-preview",
-    paste0("--output=", pdf_name)
-)
-system2("R", args)
+## pdf_name <- file.path("releases", paste0("STITCH_", version, ".pdf"))
+## args = c(
+##     "CMD", "Rd2pdf", pkg, "--batch", "--force", "--no-preview",
+##     paste0("--output=", pdf_name)
+## )
+## system2("R", args)

@@ -540,7 +540,8 @@ void calculate_diploid_gammaUpdate(
     double& prev,
     const int suppressOutput,
     std::string& prev_section,
-    std::string& next_section
+    std::string& next_section,
+    bool printLike
 ) {
     //
     next_section="Gamma update";
@@ -612,6 +613,23 @@ void calculate_diploid_gammaUpdate(
             } // end of loop onk
         } // end of loop on SNP within read
     }
+
+    if (printLike) {
+      arma::vec pl = arma::ones<arma::vec>(K * K);
+      for(k1 = 0; k1 < K; k1++) {
+          for(k2 = 0; k2 < K; k2++) {
+              for(iRead = 0; iRead < nReads; iRead++) {
+                  eMatRead_t_col = eMatRead_t.col(iRead);
+                  eHapsCurrent_t_col = eHapsCurrent_tc.slice(s).col(t);
+                  a = eMatRead_t_col(k1);
+                  b = eMatRead_t_col(k2);
+                  pl[k1*K + k2] *= (a/2 + b/2);
+              }
+          }
+      }
+      std::cout << pl << std::endl;
+    }
+
     return;
 }
 
@@ -724,7 +742,8 @@ Rcpp::List forwardBackwardDiploid(
     const bool update_in_place = false, // update directly into output variables
     const bool pass_in_alphaBeta = false, // whether to pass in pre-made alphaHat, betaHat
     const bool output_haplotype_dosages = false, // whether to output state probabilities
-    const bool rescale_eMatGrid_t = true // whether to rescale emat to minimize underflow problems, or to avoid, so log(c) = P(O | \lambda) has meaning    
+    const bool rescale_eMatGrid_t = true, // whether to rescale emat to minimize underflow problems, or to avoid, so log(c) = P(O | \lambda) has meaning
+    bool printLike = false
 ) {
   double prev=clock();
   std::string prev_section="Null";
@@ -855,9 +874,11 @@ Rcpp::List forwardBackwardDiploid(
               //
               priorSum_m.col(s) += gammaK_t.col(0);
               //
-              calculate_diploid_gammaUpdate(gammaSum0_tc, gammaSum1_tc, s, sampleReads, gamma_t, eHapsCurrent_tc, eMatRead_t, prev, suppressOutput, prev_section, next_section);
+              calculate_diploid_gammaUpdate(gammaSum0_tc, gammaSum1_tc, s, sampleReads, gamma_t, eHapsCurrent_tc, eMatRead_t, prev, suppressOutput, prev_section, next_section, printLike);
               //
               rcpp_make_diploid_jUpdate(alphaMatSum_tc, s, alphaHat_t, betaHat_t, transMatRate_tc_D, alphaMatCurrent_tc, eMatGrid_t, prev, suppressOutput, prev_section, next_section);
+          } else if (printLike) {
+              calculate_diploid_gammaUpdate(gammaSum0_tc, gammaSum1_tc, s, sampleReads, gamma_t, eHapsCurrent_tc, eMatRead_t, prev, suppressOutput, prev_section, next_section, printLike);
           }
           //
       }
