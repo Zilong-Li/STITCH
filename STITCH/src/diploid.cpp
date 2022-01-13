@@ -540,8 +540,7 @@ void calculate_diploid_gammaUpdate(
     double& prev,
     const int suppressOutput,
     std::string& prev_section,
-    std::string& next_section,
-    bool printLike
+    std::string& next_section
 ) {
     //
     next_section="Gamma update";
@@ -614,20 +613,6 @@ void calculate_diploid_gammaUpdate(
         } // end of loop on SNP within read
     }
 
-    if (printLike) {
-      arma::rowvec pl = arma::ones<arma::rowvec>(K * K);
-      for(k1 = 0; k1 < K; k1++) {
-          for(k2 = 0; k2 < K; k2++) {
-              for(iRead = 0; iRead < nReads; iRead++) {
-                  eMatRead_t_col = eMatRead_t.col(iRead);
-                  a = eMatRead_t_col(k1);
-                  b = eMatRead_t_col(k2);
-                  pl[k1*K + k2] *= (a/2 + b/2);
-              }
-          }
-      }
-      std::cout << pl;
-    }
 
     return;
 }
@@ -866,14 +851,14 @@ Rcpp::List forwardBackwardDiploid(
           prev_section=next_section;
           //
           hapSum_tc.slice(s) += gammaK_t;
-          if (!generate_fb_snp_offsets || printLike) {
+          if (!generate_fb_snp_offsets) {
               next_section="Update prior, gamma, jUpdate";
               prev=print_times(prev, suppressOutput, prev_section, next_section);
               prev_section=next_section;
               //
               priorSum_m.col(s) += gammaK_t.col(0);
               //
-              calculate_diploid_gammaUpdate(gammaSum0_tc, gammaSum1_tc, s, sampleReads, gamma_t, eHapsCurrent_tc, eMatRead_t, prev, suppressOutput, prev_section, next_section, printLike);
+              calculate_diploid_gammaUpdate(gammaSum0_tc, gammaSum1_tc, s, sampleReads, gamma_t, eHapsCurrent_tc, eMatRead_t, prev, suppressOutput, prev_section, next_section);
               //
               rcpp_make_diploid_jUpdate(alphaMatSum_tc, s, alphaHat_t, betaHat_t, transMatRate_tc_D, alphaMatCurrent_tc, eMatGrid_t, prev, suppressOutput, prev_section, next_section);
           }
@@ -886,6 +871,30 @@ Rcpp::List forwardBackwardDiploid(
       //if (return_a_sampled_path) {
       //    sampled_path_diploid_t = sample_diploid_path(alphaHat_t, transMatRate_t_D, eMatGrid_t, alphaMat_t, T, K, c);
       //}
+      if (printLike) {
+          int nReads = sampleReads.size();
+          arma::ivec bqU, pRU;
+          int J, cr, j, iRead, k1, k2, t, K_times_k1, kk;
+          for(iRead = 0; iRead < nReads; iRead++) {
+              // recal that below is what is used to set each element of sampleRead
+              // sampleReads.push_back(Rcpp::List::create(nU,d,phiU,pRU));
+              Rcpp::List readData = as<Rcpp::List>(sampleReads[iRead]);
+              J = readData[0]; // number of SNPs on read
+              cr = readData[1]; // central SNP or grid point
+              bqU = as<arma::ivec>(readData[2]); // bq for each SNP
+              pRU = as<arma::ivec>(readData[3]); // position of each SNP from 0 to T-1
+              for(j = 0; j <= J; j++) {
+                  t=pRU(j); // position of this SNP in full T sized matrix
+                  //
+                  // first haplotype (ie (k,k1))
+                  //
+                  // RECAL  eMatRead(iRead,k) = eMatRead(iRead,k) * ( eHaps(pRU(j),k) * pA + (1-eHaps(pRU(j),k)) * pR);
+                  // RECAL  eMat(readSNP,k1+K*k2) = eMat(readSNP,k1+K*k2) * (0.5 * eMatRead(iRead,k1) + 0.5 * eMatRead(iRead,k2));
+                  //
+                  std::cout << "SNP-" << t << ":" << nReads << ":" << iRead << ":" << J << "\t" << eMatRead_t.col(iRead).t() ;
+              } // end of loop on SNP within read
+          }
+      }
   }
   //
   //

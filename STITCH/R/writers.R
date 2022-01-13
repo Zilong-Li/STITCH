@@ -486,7 +486,8 @@ per_core_get_results <- function(
                 grid = grid,
                 snp_start_1_based = first_snp_in_region,
                 snp_end_1_based = last_snp_in_region,
-                output_haplotype_dosages = output_haplotype_dosages ## whether to return states
+                output_haplotype_dosages = output_haplotype_dosages, ## whether to return states
+                printLike = TRUE
             )
             
         }
