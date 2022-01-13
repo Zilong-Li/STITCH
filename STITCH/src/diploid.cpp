@@ -872,27 +872,29 @@ Rcpp::List forwardBackwardDiploid(
       //    sampled_path_diploid_t = sample_diploid_path(alphaHat_t, transMatRate_t_D, eMatGrid_t, alphaMat_t, T, K, c);
       //}
       if (printLike) {
-          int nReads = sampleReads.size();
           arma::ivec bqU, pRU;
-          int J, cr, j, iRead, k1, k2, t, K_times_k1, kk;
-          for(iRead = 0; iRead < nReads; iRead++) {
-              // recal that below is what is used to set each element of sampleRead
-              // sampleReads.push_back(Rcpp::List::create(nU,d,phiU,pRU));
-              Rcpp::List readData = as<Rcpp::List>(sampleReads[iRead]);
-              J = readData[0]; // number of SNPs on read
-              cr = readData[1]; // central SNP or grid point
-              bqU = as<arma::ivec>(readData[2]); // bq for each SNP
-              pRU = as<arma::ivec>(readData[3]); // position of each SNP from 0 to T-1
-              for(j = 0; j <= J; j++) {
-                  t=pRU(j); // position of this SNP in full T sized matrix
-                  //
-                  // first haplotype (ie (k,k1))
-                  //
+          int J, cr, j, iSNP, iRead, k1, k2, t, ti;
+          for (iSNP = 0; iSNP < nSNPs_local; iSNP++) {
+              ti = iSNP + snp_start_1_based - 1;
+              arma::rowvec pl = arma::ones<arma::rowvec>(K * K);
+              for(iRead = 0; iRead < nReads; iRead++) {
+                  Rcpp::List readData = as<Rcpp::List>(sampleReads[iRead]);
+                  J = readData[0]; // number of SNPs on read
+                  bqU = as<arma::ivec>(readData[2]); // bq for each SNP
+                  pRU = as<arma::ivec>(readData[3]); // position of each SNP from 0 to T-1
                   // RECAL  eMatRead(iRead,k) = eMatRead(iRead,k) * ( eHaps(pRU(j),k) * pA + (1-eHaps(pRU(j),k)) * pR);
                   // RECAL  eMat(readSNP,k1+K*k2) = eMat(readSNP,k1+K*k2) * (0.5 * eMatRead(iRead,k1) + 0.5 * eMatRead(iRead,k2));
-                  //
-                  std::cout << "SNP-" << t << ":" << nReads << ":" << iRead << ":" << J << "\t" << eMatRead_t.col(iRead).t() ;
-              } // end of loop on SNP within read
+                  for(j = 0; j <= J; j++) {
+                      if (ti == pRU(j)) {
+                          for (k1 = 0; k1 < K; k1++) {
+                              for (k2 = 0; k2 < K; k2++) {
+                                  pl[k1*K + k2] *= eMatRead_t.col(iRead)(k1)/2 + eMatRead_t.col(iRead)(k2)/2;
+                              }
+                          }
+                      }
+                  }
+              }
+              std::cout << "SNP:" << ti << "\t" << pl;
           }
       }
   }
