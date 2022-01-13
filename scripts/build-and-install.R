@@ -11,7 +11,6 @@ for(key in c("--file=", "--f=")) {
 }
 
 clean_build <- TRUE
-clean_build <- FALSE
 if (Sys.getenv("DIRTY_BUILD") == "TRUE")
     clean_build <- FALSE
 

@@ -885,7 +885,7 @@ Rcpp::List forwardBackwardDiploid(
                   // RECAL  eMatRead(iRead,k) = eMatRead(iRead,k) * ( eHaps(pRU(j),k) * pA + (1-eHaps(pRU(j),k)) * pR);
                   // RECAL  eMat(readSNP,k1+K*k2) = eMat(readSNP,k1+K*k2) * (0.5 * eMatRead(iRead,k1) + 0.5 * eMatRead(iRead,k2));
                   for(j = 0; j <= J; j++) {
-                      if (ti == pRU(j)) {
+                      if (ti == pRU(j)) {  // only do calculation if the snp index matches
                           for (k1 = 0; k1 < K; k1++) {
                               for (k2 = 0; k2 < K; k2++) {
                                   pl[k1*K + k2] *= eMatRead_t.col(iRead)(k1)/2 + eMatRead_t.col(iRead)(k2)/2;
