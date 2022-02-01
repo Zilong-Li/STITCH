@@ -500,7 +500,14 @@ per_core_get_results <- function(
         if (iSample %in% highCovInLow) {
             save(gp_t, file = file_dosages(tempdir, iSample, regionName, "piece.gp_t"))
         }
-        
+
+        ## print out likelihood of haplotye
+
+        if ( !is.null(fbsoL[[1]][["list_of_pl_isample"]]) ) {
+            gl_imat <- fbsoL[[1]][["list_of_pl_isample"]]
+            save(gl_imat, file = file_dosages(tempdir, iSample, regionName, "piece.pl"))
+        }
+
         ## 
         eij <- round(gp_t[2, ] + 2 * gp_t[3, ], 3) ## prevent weird rounding issues
         fij <- round(gp_t[2, ] + 4 * gp_t[3, ], 3) ##

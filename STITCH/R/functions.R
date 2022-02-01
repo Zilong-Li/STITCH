@@ -3792,7 +3792,7 @@ subset_of_complete_iteration <- function(
             gamma_t = gamma_t,
             eMatGrid_t = eMatGrid_t,
             return_gammaK = return_gammaK,
-            printLike = FLASE
+            printLike = FALSE
         )
 
         ## kind of like

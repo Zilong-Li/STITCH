@@ -773,6 +773,7 @@ Rcpp::List forwardBackwardDiploid(
   Rcpp::List to_return;
   Rcpp::List list_of_gamma_t; 
   Rcpp::List list_of_gammaK_t;
+  Rcpp::List list_of_pl_isample;
   if (!update_in_place) {
       gammaSum0_tc = arma::zeros(K, nSNPs, S);
       gammaSum1_tc = arma::zeros(K, nSNPs, S);      
@@ -871,31 +872,43 @@ Rcpp::List forwardBackwardDiploid(
       //if (return_a_sampled_path) {
       //    sampled_path_diploid_t = sample_diploid_path(alphaHat_t, transMatRate_t_D, eMatGrid_t, alphaMat_t, T, K, c);
       //}
+      // if (printLike) {
+      //     arma::ivec bqU, pRU;
+      //     int J, cr, j, iSNP, iRead, k1, k2, t, ti;
+      //     for (iSNP = 0; iSNP < nSNPs_local; iSNP++) {
+      //         ti = iSNP + snp_start_1_based - 1;
+      //         arma::rowvec pl = arma::ones<arma::rowvec>(K * K);
+      //         for(iRead = 0; iRead < nReads; iRead++) {
+      //             Rcpp::List readData = as<Rcpp::List>(sampleReads[iRead]);
+      //             J = readData[0]; // number of SNPs on read
+      //             bqU = as<arma::ivec>(readData[2]); // bq for each SNP
+      //             pRU = as<arma::ivec>(readData[3]); // position of each SNP from 0 to T-1
+      //             // RECAL  eMatRead(iRead,k) = eMatRead(iRead,k) * ( eHaps(pRU(j),k) * pA + (1-eHaps(pRU(j),k)) * pR);
+      //             // RECAL  eMat(readSNP,k1+K*k2) = eMat(readSNP,k1+K*k2) * (0.5 * eMatRead(iRead,k1) + 0.5 * eMatRead(iRead,k2));
+      //             for(j = 0; j <= J; j++) {
+      //                 if (ti == pRU(j)) {  // only do calculation if the snp index matches
+      //                     for (k1 = 0; k1 < K; k1++) {
+      //                         for (k2 = 0; k2 < K; k2++) {
+      //                             pl[k1*K + k2] *= eMatRead_t.col(iRead)(k1)/2 + eMatRead_t.col(iRead)(k2)/2;
+      //                         }
+      //                     }
+      //                 }
+      //             }
+      //         }
+      //         std::cout << "SNP:" << ti << "\t" << pl;
+      //     }
+      // }
       if (printLike) {
-          arma::ivec bqU, pRU;
-          int J, cr, j, iSNP, iRead, k1, k2, t, ti;
-          for (iSNP = 0; iSNP < nSNPs_local; iSNP++) {
-              ti = iSNP + snp_start_1_based - 1;
-              arma::rowvec pl = arma::ones<arma::rowvec>(K * K);
-              for(iRead = 0; iRead < nReads; iRead++) {
-                  Rcpp::List readData = as<Rcpp::List>(sampleReads[iRead]);
-                  J = readData[0]; // number of SNPs on read
-                  bqU = as<arma::ivec>(readData[2]); // bq for each SNP
-                  pRU = as<arma::ivec>(readData[3]); // position of each SNP from 0 to T-1
-                  // RECAL  eMatRead(iRead,k) = eMatRead(iRead,k) * ( eHaps(pRU(j),k) * pA + (1-eHaps(pRU(j),k)) * pR);
-                  // RECAL  eMat(readSNP,k1+K*k2) = eMat(readSNP,k1+K*k2) * (0.5 * eMatRead(iRead,k1) + 0.5 * eMatRead(iRead,k2));
-                  for(j = 0; j <= J; j++) {
-                      if (ti == pRU(j)) {  // only do calculation if the snp index matches
-                          for (k1 = 0; k1 < K; k1++) {
-                              for (k2 = 0; k2 < K; k2++) {
-                                  pl[k1*K + k2] *= eMatRead_t.col(iRead)(k1)/2 + eMatRead_t.col(iRead)(k2)/2;
-                              }
-                          }
-                      }
-                  }
-              }
-              std::cout << "SNP:" << ti << "\t" << pl;
-          }
+          // arma::mat gl_i = arma::ones(KK, nSNPs_local);
+          // int iSNP, k1, k2, tk, ti;
+          // for (iSNP = 0; iSNP < nSNPs_local; iSNP++) {
+          //     ti = iSNP + snp_start_1_based - 1; // position of each SNP from 0 to T-1
+          //     arma::vec pl = alphaHat_t.col(ti) % betaHat_t.col(ti);
+          //     // std::cout << "SNP:" << ti << "\t" << pl.t();
+          // }
+          arma::mat gl_imat = alphaHat_t % betaHat_t;
+          list_of_pl_isample.push_back(gl_imat, "gl_imat");
+          to_return.push_back(list_of_pl_isample, "list_of_pl_isample");
       }
   }
   //
