@@ -505,7 +505,7 @@ per_core_get_results <- function(
 
         if ( !is.null(fbsoL[[1]][["list_of_pl_isample"]]) ) {
             gl_imat <- fbsoL[[1]][["list_of_pl_isample"]]
-            save(gl_imat, file = file_dosages(tempdir, iSample, regionName, "piece.pl"))
+            save(gl_imat, file = file_dosages(tempdir, iSample, regionName, paste0("piece.", i_output_block, ".pl")))
         }
 
         ## 
