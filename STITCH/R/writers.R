@@ -184,6 +184,15 @@ make_and_write_output_file <- function(
             hweCount <- hweCount + out[[i]]$hweCount
             afCount <- afCount + out[[i]]$afCount
         }
+        ## output glhaps
+        conbin <- file(file.path(outputdir , paste0("piece.block", i_output_block, ".glhaps.bin")), "wb")
+        writeBin(as.integer(c(N, nSNPsInOutputBlock, K)), conbin, size=4)
+        for(i in 1:length(out)) {
+            writeBin(as.numeric(unlist(out[[i]]$glhaps)), conbin, size=8)
+        }
+        close(conbin)
+        # save(list_glhaps, file = file.path(outputdir , paste0("piece.block", i_output_block, ".glhaps.RData")))
+
         if (output_format == "bgen") {
             ## should be fine if R is indeed just making copies as it normally does
             ## indeed even if it does get removed below
@@ -216,7 +225,6 @@ make_and_write_output_file <- function(
                 gen_imp[snps_in_output_block, j] <- gp_t[2, ] + 2 * gp_t[3, ]
             }
         }
-        
         ## now make HWE etc
         thetaHat <- infoCount[, 1] / 2 / N
         denom <- 2 * N * thetaHat * (1-thetaHat)
@@ -366,7 +374,6 @@ per_core_get_results <- function(
     bundledSampleReads <- NULL
     bundledSampleProbs <- NULL
     bundledAlphaBetaBlocks <- NULL
-    
     ## load sample
     ## load pRgivenH1
     K <- dim(eHapsCurrent_tc)[1]        
@@ -395,9 +402,10 @@ per_core_get_results <- function(
     }
     pRgivenH1_m<- NULL
     pRgivenH2_m<- NULL
-
+    # create named list with each element (core) being empty
+    glhaps <- vector("list", length(who_to_run))
+    names(glhaps) <- as.character(who_to_run)
     for (iiSample in 1:(length(who_to_run))) {
-        
         iSample <- who_to_run[iiSample]
         ## get these from list?
         out <- get_sampleReads_from_dir_for_sample(
@@ -505,7 +513,8 @@ per_core_get_results <- function(
 
         if ( !is.null(fbsoL[[1]][["list_of_pl_isample"]]) ) {
             gl_imat <- fbsoL[[1]][["list_of_pl_isample"]]
-            save(gl_imat, file = file_dosages(tempdir, iSample, regionName, paste0("piece.", i_output_block, ".pl")))
+            glhaps[[as.character(iSample)]] <- gl_imat[[1]]
+            # save(gl_imat, file = file_dosages(tempdir, iSample, regionName, paste0("piece.", i_output_block, ".pl")))
         }
 
         ## 
@@ -552,10 +561,10 @@ per_core_get_results <- function(
         }
 
     }
-    
     return(
         list(
             gp_raw_t = gp_raw_t,
+            glhaps = glhaps,
             vcf_matrix_to_out = vcf_matrix_to_out,
             infoCount = infoCount,
             hweCount = hweCount,
