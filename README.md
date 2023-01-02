@@ -1,13 +1,14 @@
 STITCH - Sequencing To Imputation Through Constructing Haplotypes
 =================================================================
-**__Current Version: 1.6.6__**
-Release date: April 9, 2021
+**__Current Version: 1.6.7__**
+Release date: Dec 8,  2022
 
-[![Build Status](https://img.shields.io/travis/rwdavies/STITCH/master.svg)](https://app.travis-ci.com/github/rwdavies/STITCH)
+![Build Status](https://github.com/rwdavies/STITCH/workflows/CI/badge.svg)
+
 
 Changes in latest version
 
-1. Export more functions for library use
+1. Fix bugs, change seqlib library
 
 For details of past changes please see [CHANGELOG](CHANGELOG.md).
 
@@ -56,6 +57,8 @@ R CMD INSTALL STITCH_1.6.6.tar.gz
 You can confirm the installation worked using the quick start run below.
 
 To install the latest development code in the repository, use `./scripts/build-and-install.sh`. To install alternative releases, either download other releases from Github like done above, or use the historical `releases` directory.
+
+Note that STITCH as run in the original paper used version 3 of R. However STITCH should work fine with either version 3 or version 4 of R. If you have dependency problems, you can easier post an issue on github, or try the conda installation below.
 
 ### conda <a name="paragraph-installation-conda"></a>
 

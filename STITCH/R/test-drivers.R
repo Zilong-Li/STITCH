@@ -36,12 +36,13 @@ make_simple_sam_text <- function(
     return(out)
 }
 
+#' @export
 make_simple_bam <- function(
     file_stem,
     sam
 ) {
     cat(sam, file = paste0(file_stem, ".sam"))
-    system2(
+    out <- system2(
         "samtools",
         args = c(
             "view", "-bS", shQuote(paste0(file_stem, ".sam")),
@@ -236,7 +237,9 @@ make_acceptance_test_data_package <- function(
     phred_bq = 25,
     regionName = NA,
     write_row_as_NA = NULL,
-    use_bx_tag = FALSE
+    use_bx_tag = FALSE,
+    refs = NA,
+    alts = NA
 ) {
 
     if (length(n_reads) == 1) {
@@ -280,7 +283,14 @@ make_acceptance_test_data_package <- function(
         L_is_simple <- FALSE
     }
     posfile <- file.path(outputdir, paste0("pos.", regionName, ".txt"))
-    pos <- make_posfile(posfile, L = L, n_snps = n_snps, chr = chr)
+    pos <- make_posfile(
+        posfile,
+        L = L,
+        n_snps = n_snps,
+        chr = chr,
+        refs = refs,
+        alts = alts
+    )
     L <- pos[, 2]
 
     phasefile <- file.path(outputdir, paste0("phase.", regionName, ".txt"))
@@ -640,6 +650,7 @@ make_reference_package <- function(
     }
 
     ## add a space in it
+    reference_vcf_file <- file.path(outputdir, paste0("ref hap.", regionName, ".vcf.gz"))
     reference_haplotype_file <- file.path(outputdir, paste0("ref hap.", regionName, ".txt.gz"))
     reference_legend_file <- file.path(outputdir, paste0("ref legend.", regionName, ".txt.gz"))
     reference_sample_file <- file.path(outputdir, paste0("ref sample.", regionName, ".txt"))
@@ -652,7 +663,8 @@ make_reference_package <- function(
         posfile = posfile,
         n_snps = n_snps,
         seed = 1,
-        L = L
+        L = L,
+        chr = chr
     )
 
     ##ID POP GROUP SEX
@@ -662,7 +674,7 @@ make_reference_package <- function(
     reference_samples[, "POP"] <- rep(reference_populations, each = n_samples_per_pop)
     reference_samples[, "GROUP"] <- "NOT_USED"
     reference_samples[, "SEX"] <- rep(reference_genders, length.out = nrow(reference_samples))
-    reference_samples[, "ID"] <- paste0("NOT_USED", 1:nrow(reference_samples))
+    reference_samples[, "ID"] <- paste0("SAMPLE", 1:nrow(reference_samples))
 
     ## override the header for testing
     if (is.na(reference_sample_header[1]) == FALSE) {
@@ -721,8 +733,12 @@ make_reference_package <- function(
         colClasses <- NULL
     }
     
+    ## do reference VCF here
+    make_and_write_reference_vcf(pos, reference_haplotypes, reference_samples, reference_vcf_file) 
+    
     return(
         list(
+            reference_vcf_file = reference_vcf_file,
             reference_haplotype_file = reference_haplotype_file,
             reference_sample_file = reference_sample_file,
             reference_legend_file = reference_legend_file,
@@ -737,6 +753,63 @@ make_reference_package <- function(
     )
 
 }
+
+
+
+make_and_write_reference_vcf <- function(pos, reference_haplotypes, reference_samples, reference_vcf_file) {
+    
+    reference_vcf_file_unzipped <- gsub(".gz", "", reference_vcf_file)
+    sampleNames <- reference_samples[, 1]
+    header <- paste0(
+        '##fileformat=VCFv4.1\n',
+        '##FILTER=<ID=PASS,Description="All filters passed">\n',
+        '##FORMAT=<ID=GT,Number=1,Type=String,Description="Phased Genotype">\n',
+        paste0('##contig=<ID=', pos[1, 1], '>', sep = ""), "\n"
+    )
+    header2 <- paste("#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", paste(sampleNames, collapse = "\t", sep="\t"), sep="\t")
+    cat(header, header2, "\n", sep="", file = reference_vcf_file_unzipped)
+
+    ## make rest
+    N <- length(sampleNames)
+    vcf_matrix_to_out <- data.frame(matrix(
+        data = NA,
+        nrow = nrow(pos),
+        ncol = N + 9
+    ))
+    
+    vcf_matrix_to_out[, 1] <- pos[, 1]
+    vcf_matrix_to_out[, 2] <- pos[, 2]
+    vcf_matrix_to_out[, 3] <- "."
+    vcf_matrix_to_out[, 4] <- pos[, 3]
+    vcf_matrix_to_out[, 5] <- pos[, 4]
+    vcf_matrix_to_out[, 6] <- "."
+    vcf_matrix_to_out[, 7] <- "PASS"
+    vcf_matrix_to_out[, 8] <- "."
+    vcf_matrix_to_out[, 9] <- "GT"
+    
+    for(iSample in 1:length(sampleNames)) {
+        i <- 2 * iSample - 1
+        vcf_matrix_to_out[, 9 + iSample] <- paste0(reference_haplotypes[, i], "|", reference_haplotypes[, i + 1])
+    }
+
+    write.table(
+        vcf_matrix_to_out,
+        file = reference_vcf_file_unzipped,
+        row.names = FALSE,
+        col.names = FALSE,
+        sep = "\t",
+        append = TRUE,
+        quote = FALSE
+    )
+
+    system(paste0("bgzip -f ", shQuote(reference_vcf_file_unzipped)))
+    system(paste0("tabix ", shQuote(reference_vcf_file)))
+
+    NULL
+    
+}
+
+
 
 
 ##position COMBINED_rate(cM/Mb) Genetic_Map(cM)
